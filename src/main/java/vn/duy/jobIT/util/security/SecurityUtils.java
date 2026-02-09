@@ -23,7 +23,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 @Service
 public class SecurityUtils {
-    @Value("${datk.jwt.base64-secret}")
+    @Value("${duy.jwt.base64-secret}")
     private String jwtKey;
 
     /**
