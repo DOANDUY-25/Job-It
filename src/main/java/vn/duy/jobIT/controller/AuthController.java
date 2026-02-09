@@ -37,7 +37,7 @@ public class AuthController {
 
     @PostMapping("/register")
     @ApiMessage("Register a new user")
-    public ResponseEntity<CreatedUserResponse> createUser(@Valid @RequestBody User user) throws Exception {
+    public ResponseEntity<CreatedUserResponse> createUser(@Valid @RequestBody User user) {
         CreatedUserResponse newUser = this.userService.createUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
     }

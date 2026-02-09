@@ -31,20 +31,20 @@ public class JobController {
 
     @PutMapping("")
     @ApiMessage("Update a job")
-    public ResponseEntity<UpdatedJobResponse> update(@Valid @RequestBody Job job) throws Exception {
+    public ResponseEntity<UpdatedJobResponse> update(@Valid @RequestBody Job job) {
         return ResponseEntity.status(HttpStatus.OK).body(this.jobService.update(job));
     }
 
     @DeleteMapping("/{id}")
     @ApiMessage("Delete job by id")
-    public ResponseEntity<Void> delete(@PathVariable("id") Long id) throws Exception{
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id){
         this.jobService.delete(id);
         return ResponseEntity.ok().body(null);
     }
 
     @GetMapping("/{id}")
     @ApiMessage("Get job by id")
-    public ResponseEntity<Job> getJob(@PathVariable("id") Long id) throws Exception{
+    public ResponseEntity<Job> getJob(@PathVariable("id") Long id){
         return ResponseEntity.ok().body(this.jobService.fetchJobById(id));
     }
 

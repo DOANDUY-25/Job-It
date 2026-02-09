@@ -57,7 +57,7 @@ public class CompanyController {
 
     @GetMapping("/{id}")
     @ApiMessage("Get company by id")
-    public ResponseEntity<Company> getCompany(@PathVariable("id") Long id) throws Exception{
+    public ResponseEntity<Company> getCompany(@PathVariable("id") Long id){
         return ResponseEntity.ok().body(this.companyService.findCompanyById(id));
     }
 }

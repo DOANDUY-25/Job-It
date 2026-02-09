@@ -22,13 +22,13 @@ public class PermissionController {
 
     @PostMapping("")
     @ApiMessage("Create a permission")
-    public ResponseEntity<Permission> create(@Valid @RequestBody Permission permission) throws Exception {
+    public ResponseEntity<Permission> create(@Valid @RequestBody Permission permission) {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.permissionService.create(permission));
     }
 
     @PutMapping("")
     @ApiMessage("Update a permission")
-    public ResponseEntity<Permission> update(@Valid @RequestBody Permission permission) throws Exception {
+    public ResponseEntity<Permission> update(@Valid @RequestBody Permission permission) {
         return ResponseEntity.status(HttpStatus.OK).body(this.permissionService.update(permission));
     }
 
@@ -45,7 +45,7 @@ public class PermissionController {
 
     @DeleteMapping("/{id}")
     @ApiMessage("Delete a permission")
-    public ResponseEntity<Void> delete(@PathVariable("id") Long id) throws Exception{
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id){
         this.permissionService.delete(id);
         return ResponseEntity.ok().body(null);
     }

@@ -1,65 +1,68 @@
 package vn.duy.jobIT.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import vn.duy.jobIT.domain.Skill;
-import vn.duy.jobIT.domain.User;
 import vn.duy.jobIT.domain.res.ResultPaginationResponse;
-import vn.duy.jobIT.domain.res.user.CreatedUserResponse;
 import vn.duy.jobIT.repository.SkillRepository;
-import vn.duy.jobIT.util.error.IdInvalidException;
+import vn.duy.jobIT.util.error.DuplicateResourceException;
+import vn.duy.jobIT.util.error.ResourceNotFoundException;
 import vn.duy.jobIT.util.response.FormatResultPagaination;
 
 @RequiredArgsConstructor
 @Service
+@Transactional
 public class SkillService {
     private final SkillRepository skillRepository;
 
-    public Skill create(Skill skill) throws Exception{
+    public Skill create(Skill skill){
         if(this.skillRepository.existsByName(skill.getName())){
-            throw new DataIntegrityViolationException("Skill name already exists");
+            throw new DuplicateResourceException("Skill", "name", skill.getName());
         }
         return this.skillRepository.save(skill);
     }
 
-    public Skill fetchSkillById(Long id) throws Exception {
-        if(this.skillRepository.existsById(id)){
-            return this.skillRepository.findById(id).get();
-        }else{
-            throw new IdInvalidException("The specified Skill ID is invalid");
-        }
+    public Skill fetchSkillById(Long id) {
+        return this.skillRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Skill", "id", id));
     }
 
-    public Skill update(Skill skill) throws Exception{
+    public Skill update(Skill skill){
         Skill currentSkill = this.fetchSkillById(skill.getId());
-        if(skill.getName() != null && this.skillRepository.existsByName(skill.getName())){
-            throw new DataIntegrityViolationException("Skill name already exists");
+        
+        // Check if new name already exists (and it's not the current skill's name)
+        if(skill.getName() != null && 
+           !skill.getName().equals(currentSkill.getName()) && 
+           this.skillRepository.existsByName(skill.getName())){
+            throw new DuplicateResourceException("Skill", "name", skill.getName());
         }
+        
         currentSkill.setName(skill.getName());
         return this.skillRepository.save(currentSkill);
     }
 
     public ResultPaginationResponse fetchAllSkill(Specification<Skill> spec, Pageable pageable){
         Page<Skill> skillPage = this.skillRepository.findAll(spec, pageable);
-        ResultPaginationResponse response = FormatResultPagaination.createPaginationResponse(skillPage);
-        return response;
+        return FormatResultPagaination.createPaginationResponse(skillPage);
     }
 
-    public void deleteSkill(Long id) throws Exception {
+    public void deleteSkill(Long id) {
         Skill currentSkill = this.fetchSkillById(id);
-        if(currentSkill == null){
-            throw new IdInvalidException("Skill ID is not found");
-        }
+        
+        // Remove skill from all jobs
         currentSkill.getJobs().forEach(
                 job -> job.getSkills().remove(currentSkill)
         );
+        
+        // Remove skill from all subscribers
         currentSkill.getSubscribers().forEach(
                 subs -> subs.getSkills().remove(currentSkill)
         );
+        
         this.skillRepository.delete(currentSkill);
     }
 }

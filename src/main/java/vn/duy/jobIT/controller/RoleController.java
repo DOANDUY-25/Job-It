@@ -24,13 +24,13 @@ public class RoleController {
 
     @PostMapping("")
     @ApiMessage("Create a role")
-    public ResponseEntity<Role> create(@Valid @RequestBody Role role) throws Exception {
+    public ResponseEntity<Role> create(@Valid @RequestBody Role role) {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.roleService.create(role));
     }
 
     @PutMapping("")
     @ApiMessage("Update a role")
-    public ResponseEntity<Role> update(@Valid @RequestBody Role role) throws Exception {
+    public ResponseEntity<Role> update(@Valid @RequestBody Role role) {
         return ResponseEntity.status(HttpStatus.OK).body(this.roleService.update(role));
     }
 
@@ -47,13 +47,13 @@ public class RoleController {
 
     @GetMapping("/{id}")
     @ApiMessage("Fetch a role by id")
-    public ResponseEntity<Role> fetchById(@PathVariable("id") Long id) throws Exception {
+    public ResponseEntity<Role> fetchById(@PathVariable("id") Long id) {
         return ResponseEntity.status(HttpStatus.OK).body(this.roleService.fetchRoleById(id));
     }
 
     @DeleteMapping("/{id}")
     @ApiMessage("Delete a role")
-    public ResponseEntity<Void> delete(@PathVariable("id") Long id) throws Exception{
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id){
         this.roleService.delete(id);
         return ResponseEntity.ok().body(null);
     }

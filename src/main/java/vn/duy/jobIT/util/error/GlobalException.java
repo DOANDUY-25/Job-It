@@ -12,6 +12,8 @@ import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import vn.duy.jobIT.domain.res.RestResponse;
 
 import java.text.ParseException;
@@ -20,90 +22,170 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalException {
+    
+    // Authentication & Authorization Exceptions
     @ExceptionHandler(value = {
             UsernameNotFoundException.class,
-            BadCredentialsException.class,
-            ParseException.class,
-            MissingRequestCookieException.class
+            BadCredentialsException.class
     })
-    public ResponseEntity<Object> handleSecurityException(Exception ex){
-        RestResponse<Object> res = new RestResponse<Object>();
-        res.setStatusCode(HttpStatus.BAD_REQUEST.value());
-        res.setError("Exception occurs...");
+    public ResponseEntity<RestResponse<Object>> handleAuthenticationException(Exception ex){
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatusCode(HttpStatus.UNAUTHORIZED.value());
+        res.setError("Authentication Failed");
         res.setMessage(ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(res);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(res);
     }
 
-    @ExceptionHandler(value = {
-           NoResourceFoundException.class
-    })
-    public ResponseEntity<Object> handleNotFoundException(Exception ex){
-        RestResponse<Object> res = new RestResponse<Object>();
+    @ExceptionHandler(PermissionException.class)
+    public ResponseEntity<RestResponse<Object>> handlePermissionException(PermissionException ex){
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatusCode(HttpStatus.FORBIDDEN.value());
+        res.setError("Access Denied");
+        res.setMessage(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(res);
+    }
+
+    // Resource Not Found Exceptions
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<RestResponse<Object>> handleResourceNotFoundException(ResourceNotFoundException ex){
+        RestResponse<Object> res = new RestResponse<>();
         res.setStatusCode(HttpStatus.NOT_FOUND.value());
-        res.setError("404 Not Found. URL may not exist...");
+        res.setError("Resource Not Found");
         res.setMessage(ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND.value()).body(res);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
     }
 
-    @ExceptionHandler(value = {
-            IdInvalidException.class,
-            DataIntegrityViolationException.class,
-            IllegalStateException.class
-    })
-    public ResponseEntity<Object> handleIdException(Exception ex){
-        RestResponse<Object> res = new RestResponse<Object>();
-        res.setStatusCode(HttpStatus.BAD_REQUEST.value());
-        res.setError("Exception occurs...");
-        res.setMessage(ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(res);
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<RestResponse<Object>> handleNoResourceFoundException(NoResourceFoundException ex){
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatusCode(HttpStatus.NOT_FOUND.value());
+        res.setError("Endpoint Not Found");
+        res.setMessage("The requested URL does not exist");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
     }
 
-    @ExceptionHandler(value = MethodArgumentNotValidException.class)
-    public ResponseEntity<Object> validationError(
-            MethodArgumentNotValidException ex
-    ){
+    // Validation Exceptions
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<RestResponse<Object>> handleValidationException(MethodArgumentNotValidException ex){
         BindingResult result = ex.getBindingResult();
         final List<FieldError> fieldErrors = result.getFieldErrors();
 
-        RestResponse<Object> res = new RestResponse<Object>();
+        RestResponse<Object> res = new RestResponse<>();
         res.setStatusCode(HttpStatus.BAD_REQUEST.value());
-        res.setError(ex.getBody().getDetail());
+        res.setError("Validation Failed");
 
-        List<String> errors = fieldErrors.stream().map(f -> f.getDefaultMessage()).collect(Collectors.toList());
+        List<String> errors = fieldErrors.stream()
+                .map(f -> f.getField() + ": " + f.getDefaultMessage())
+                .collect(Collectors.toList());
         res.setMessage(errors.size() > 1 ? errors : errors.get(0));
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }
 
-    @ExceptionHandler(value = {
-        StorageException.class
-    })
-    public ResponseEntity<Object> handleFileUploadException(Exception ex){
-        RestResponse<Object> res = new RestResponse<Object>();
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<RestResponse<Object>> handleInvalidRequestException(InvalidRequestException ex){
+        RestResponse<Object> res = new RestResponse<>();
         res.setStatusCode(HttpStatus.BAD_REQUEST.value());
-        res.setError("Exception upload file");
+        res.setError("Invalid Request");
         res.setMessage(ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(res);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }
 
-    @ExceptionHandler(value = {
-            PermissionException.class,
+    // Duplicate Resource Exceptions
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<RestResponse<Object>> handleDuplicateResourceException(DuplicateResourceException ex){
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatusCode(HttpStatus.CONFLICT.value());
+        res.setError("Duplicate Resource");
+        res.setMessage(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(res);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<RestResponse<Object>> handleDataIntegrityViolationException(DataIntegrityViolationException ex){
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatusCode(HttpStatus.CONFLICT.value());
+        res.setError("Data Integrity Violation");
+        
+        String message = ex.getMessage();
+        if (message != null && message.contains("Duplicate entry")) {
+            res.setMessage("A record with this value already exists");
+        } else if (message != null && message.contains("foreign key constraint")) {
+            res.setMessage("Cannot delete or update: this record is referenced by other data");
+        } else {
+            res.setMessage("Database constraint violation");
+        }
+        
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(res);
+    }
+
+    // File Upload Exceptions
+    @ExceptionHandler(StorageException.class)
+    public ResponseEntity<RestResponse<Object>> handleStorageException(StorageException ex){
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        res.setError("File Upload Failed");
+        res.setMessage(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<RestResponse<Object>> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex){
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatusCode(HttpStatus.PAYLOAD_TOO_LARGE.value());
+        res.setError("File Too Large");
+        res.setMessage("Maximum upload size exceeded. Please upload a smaller file.");
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(res);
+    }
+
+    // ID Invalid Exceptions
+    @ExceptionHandler(IdInvalidException.class)
+    public ResponseEntity<RestResponse<Object>> handleIdInvalidException(IdInvalidException ex){
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        res.setError("Invalid ID");
+        res.setMessage(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<RestResponse<Object>> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex){
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        res.setError("Invalid Parameter Type");
+        res.setMessage(String.format("Parameter '%s' should be of type %s", 
+            ex.getName(), 
+            ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown"));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+    }
+
+    // Other Exceptions
+    @ExceptionHandler({
+        ParseException.class,
+        MissingRequestCookieException.class,
+        IllegalStateException.class,
+        IllegalArgumentException.class
     })
-    public ResponseEntity<Object> handlePermissionException(Exception ex){
-        RestResponse<Object> res = new RestResponse<Object>();
-        res.setStatusCode(HttpStatus.FORBIDDEN.value());
-        res.setError("FORBIDDEN");
+    public ResponseEntity<RestResponse<Object>> handleBadRequestException(Exception ex){
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        res.setError("Bad Request");
         res.setMessage(ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN.value()).body(res);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }
 
+    // Generic Exception Handler (Catch-all)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<RestResponse<Object>> handleAllException(Exception ex) {
-        RestResponse<Object> res = new RestResponse<Object>();
+        RestResponse<Object> res = new RestResponse<>();
         res.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        res.setMessage(ex.getMessage());
         res.setError("Internal Server Error");
+        res.setMessage("An unexpected error occurred. Please try again later.");
+        
+        // Log the full exception for debugging (in production, use proper logging)
+        System.err.println("Unexpected error: " + ex.getMessage());
+        ex.printStackTrace();
+        
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
     }
-
 }

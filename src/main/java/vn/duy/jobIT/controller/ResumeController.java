@@ -35,29 +35,28 @@ public class ResumeController {
 
     @PostMapping("")
     @ApiMessage("Create a resume")
-    public ResponseEntity<CreatedResumeResponse> create(@Valid @RequestBody Resume resume) throws Exception {
+    public ResponseEntity<CreatedResumeResponse> create(@Valid @RequestBody Resume resume) {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.resumeService.create(resume));
     }
 
     @PutMapping("")
     @ApiMessage("Update a resume")
-    public ResponseEntity<UpdatedResumeResponse> update(@Valid @RequestBody Resume resume) throws Exception {
+    public ResponseEntity<UpdatedResumeResponse> update(@Valid @RequestBody Resume resume) {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.resumeService.update(resume));
     }
 
     @DeleteMapping("/{id}")
     @ApiMessage("Delete a resume")
-    public ResponseEntity<Void> delete(@PathVariable("id") Long id) throws Exception{
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id){
         this.resumeService.delete(id);
         return ResponseEntity.ok().body(null);
     }
 
     @GetMapping("/{id}")
     @ApiMessage("Fetch a resume by id")
-    public ResponseEntity<FetchResumeResponse> fetchById(@PathVariable("id") Long id) throws Exception {
-
+    public ResponseEntity<FetchResumeResponse> fetchById(@PathVariable("id") Long id) {
         return ResponseEntity.status(HttpStatus.OK).body(
-                ResumeConvert.convertToResFetchResumeRes(this.resumeService.fetchResumelById(id))
+                ResumeConvert.convertToResFetchResumeRes(this.resumeService.fetchResumeById(id))
         );
     }
 
@@ -93,7 +92,7 @@ public class ResumeController {
 
     @PostMapping("/by-user")
     @ApiMessage("Get list resumes by user")
-    public ResponseEntity<ResultPaginationResponse> fetchResumeByUser(Pageable pageable) throws Exception {
+    public ResponseEntity<ResultPaginationResponse> fetchResumeByUser(Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK).body(this.resumeService.fetchResumeByUser(pageable));
     }
 }

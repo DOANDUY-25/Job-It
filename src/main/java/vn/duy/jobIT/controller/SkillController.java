@@ -22,13 +22,13 @@ public class SkillController {
 
     @PostMapping("")
     @ApiMessage("Create a skill")
-    public ResponseEntity<Skill> create(@Valid @RequestBody Skill skill) throws Exception {
+    public ResponseEntity<Skill> create(@Valid @RequestBody Skill skill) {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.skillService.create(skill));
     }
 
     @PutMapping("")
     @ApiMessage("Update a skill")
-    public ResponseEntity<Skill> update(@Valid @RequestBody Skill skill) throws Exception {
+    public ResponseEntity<Skill> update(@Valid @RequestBody Skill skill) {
         return ResponseEntity.status(HttpStatus.OK).body(this.skillService.update(skill));
     }
 
@@ -45,7 +45,7 @@ public class SkillController {
 
     @DeleteMapping("/{id}")
     @ApiMessage("Delete a skill")
-    public ResponseEntity<Void> delete(@PathVariable("id") Long id) throws Exception{
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id){
         this.skillService.deleteSkill(id);
         return ResponseEntity.ok().body(null);
     }

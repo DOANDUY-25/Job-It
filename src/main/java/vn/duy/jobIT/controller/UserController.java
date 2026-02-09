@@ -15,7 +15,6 @@ import vn.duy.jobIT.domain.res.ResultPaginationResponse;
 import vn.duy.jobIT.domain.res.user.UpdatedUserResponse;
 import vn.duy.jobIT.service.UserService;
 import vn.duy.jobIT.util.annotation.ApiMessage;
-import vn.duy.jobIT.util.error.IdInvalidException;
 
 @RequestMapping(path = "${apiPrefix}/users")
 @RequiredArgsConstructor
@@ -25,7 +24,7 @@ public class UserController {
 
     @PostMapping("")
     @ApiMessage("Create a user")
-    public ResponseEntity<CreatedUserResponse> createUser(@Valid @RequestBody User user) throws Exception {
+    public ResponseEntity<CreatedUserResponse> createUser(@Valid @RequestBody User user) {
         CreatedUserResponse newUser = this.userService.createUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
     }
@@ -42,9 +41,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     @ApiMessage("Fetch user by id")
-    public ResponseEntity<CreatedUserResponse> fetchCompanyById(
-            @PathVariable("id") Long id
-    ) throws Exception {
+    public ResponseEntity<CreatedUserResponse> fetchUserById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(this.userService.fetchUserById(id));
     }
 
@@ -53,15 +50,13 @@ public class UserController {
     public ResponseEntity<UpdatedUserResponse> updateUser(
             @PathVariable("id") Long id,
             @Valid @RequestBody UpdateUserDTO user
-    ) throws Exception {
+    ) {
         return ResponseEntity.ok(this.userService.updateUser(id, user));
     }
 
     @DeleteMapping("/{id}")
     @ApiMessage("Delete a user")
-    public ResponseEntity<Void> deleteUser(
-            @PathVariable("id") Long id
-    ) throws Exception {
+    public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id) {
         this.userService.deleteUser(id);
         return ResponseEntity.ok(null);
     }
