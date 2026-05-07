@@ -3,6 +3,7 @@ package vn.duy.jobIT.service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
@@ -20,6 +21,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EmailService {
     private final MailSender mailSender;
     private final JavaMailSender javaMailSender;
@@ -38,7 +40,7 @@ public class EmailService {
             message.setText(content, isHtml);
             this.javaMailSender.send(mimeMessage);
         } catch (MailException | MessagingException e) {
-            System.out.println("ERROR SEND EMAIL: " + e);
+            log.error("Failed to send email to '{}': {}", to, e.getMessage(), e);
         }
     }
 

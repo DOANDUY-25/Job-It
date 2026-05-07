@@ -1,5 +1,6 @@
 package vn.duy.jobIT.util.security;
 
+import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -22,6 +23,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 
 @Service
+@Slf4j
 public class SecurityUtils {
     @Value("${duy.jwt.base64-secret}")
     private String jwtKey;
@@ -114,7 +116,7 @@ public class SecurityUtils {
         try {
             return jwtDecoder.decode(token);
         } catch (Exception e) {
-            System.out.println(">>> JWT error: " + e.getMessage());
+            log.error("JWT validation error: {}", e.getMessage());
             throw e;
         }
     }

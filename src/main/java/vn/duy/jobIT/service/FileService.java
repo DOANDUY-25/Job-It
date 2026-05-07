@@ -1,5 +1,6 @@
 package vn.duy.jobIT.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 
 @Service
+@Slf4j
 public class FileService {
     @Value("${duy.upload-file.base-uri}")
     private String baseURI;
@@ -27,12 +29,12 @@ public class FileService {
         if (!tmpDir.isDirectory()) {
             try {
                 Files.createDirectory(tmpDir.toPath());
-                System.out.println(">>> CREATE NEW DIRECTORY SUCCESSFUL, PATH = " + tmpDir.toPath());
+                log.info("Created new upload directory: {}", tmpDir.toPath());
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("Failed to create directory: {}", tmpDir.toPath(), e);
             }
         } else {
-            System.out.println(">>> SKIP MAKING DIRECTORY, ALREADY EXISTS");
+            log.debug("Upload directory already exists, skipping creation");
         }
     }
 

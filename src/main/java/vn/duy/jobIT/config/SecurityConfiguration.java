@@ -2,6 +2,7 @@ package vn.duy.jobIT.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.util.Base64;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +29,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 @Configuration
 @EnableMethodSecurity(securedEnabled = true)
+@Slf4j
 public class SecurityConfiguration {
     @Value("${duy.jwt.base64-secret}")
     private String jwtKey;
@@ -89,7 +91,7 @@ public class SecurityConfiguration {
             try {
                 return jwtDecoder.decode(token);
             } catch (Exception e) {
-                System.out.println(">>> JWT error: " + e.getMessage());
+                log.error("JWT decode error: {}", e.getMessage());
                 throw e;
             }
         };

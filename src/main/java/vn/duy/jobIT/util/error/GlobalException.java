@@ -1,5 +1,6 @@
 package vn.duy.jobIT.util.error;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalException {
     
     // Authentication & Authorization Exceptions
@@ -182,9 +184,7 @@ public class GlobalException {
         res.setError("Internal Server Error");
         res.setMessage("An unexpected error occurred. Please try again later.");
         
-        // Log the full exception for debugging (in production, use proper logging)
-        System.err.println("Unexpected error: " + ex.getMessage());
-        ex.printStackTrace();
+        log.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
     }

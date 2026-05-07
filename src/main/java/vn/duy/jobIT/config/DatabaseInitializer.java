@@ -1,6 +1,7 @@
 package vn.duy.jobIT.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DatabaseInitializer implements CommandLineRunner {
     private final PermissionRepository permissionRepository;
     private final RoleRepository roleRepository;
@@ -25,7 +27,7 @@ public class DatabaseInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        System.out.println("Start init database");
+        log.info("Starting database initialization...");
         long countPermissions = this.permissionRepository.count();
         long countRoles = this.roleRepository.count();
         long countUsers = this.userRepository.count();
@@ -110,8 +112,9 @@ public class DatabaseInitializer implements CommandLineRunner {
         }
 
         if (countPermissions > 0 && countRoles > 0 && countUsers > 0) {
-            System.out.println(">>> SKIP INIT DATABASE ~ ALREADY HAVE DATA...");
-        } else
-            System.out.println(">>> END INIT DATABASE");
+            log.info("Database already initialized, skipping seed data");
+        } else {
+            log.info("Database initialization completed successfully");
+        }
     }
 }
