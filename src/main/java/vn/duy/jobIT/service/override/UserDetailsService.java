@@ -8,7 +8,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import vn.duy.jobIT.service.UserService;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 @Component("userDetailsService")
 @RequiredArgsConstructor
@@ -20,10 +22,16 @@ public class UserDetailsService implements org.springframework.security.core.use
         if(user == null){
             throw new UsernameNotFoundException("username / password not found");
         }
+
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        if (user.getRole() != null) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()));
+        }
+
         return new User(
                 user.getEmail(),
                 user.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+                authorities
         );
     }
 }

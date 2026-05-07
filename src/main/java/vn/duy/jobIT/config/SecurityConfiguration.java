@@ -45,11 +45,6 @@ public class SecurityConfiguration {
                 "/api/v1/auth/refresh",
                 "/api/v1/auth/register",
                 "/storage/**",
-                "/api/v1/companies/**",
-                "/api/v1/jobs/**",
-                "/api/v1/skills/**",
-                "/api/v1/files/**",
-                "/api/v1/email/**",
                 "/v3/api-docs/**",
                 "/swagger-ui/**",
                 "/swagger-ui.html"
@@ -61,7 +56,7 @@ public class SecurityConfiguration {
                 .headers(headers -> headers
                         .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
                         .frameOptions(frame -> frame.deny())
-                        .xssProtection(xss -> xss.headerValue("1; mode=block"))
+                        .xssProtection(Customizer.withDefaults())
                         .contentTypeOptions(Customizer.withDefaults())
                 )
                 .authorizeHttpRequests(
@@ -70,7 +65,6 @@ public class SecurityConfiguration {
                                 .requestMatchers(HttpMethod.GET, "/api/v1/companies/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/jobs/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/skills/**").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/v1/files/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(

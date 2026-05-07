@@ -45,7 +45,9 @@ public class SecurityService {
         Instant validity = now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS);
 
         List<String> roles = new ArrayList<>();
-        roles.add("USER_ROLE");
+        if (loginResponse.getUser() != null && loginResponse.getUser().getRole() != null) {
+            roles.add("ROLE_" + loginResponse.getUser().getRole().getName());
+        }
 
         // @formatter:off
         JwtClaimsSet claims = JwtClaimsSet.builder()
@@ -69,7 +71,9 @@ public class SecurityService {
         Instant validity = now.plus(this.refreshTokenExpiration, ChronoUnit.SECONDS);
 
         List<String> roles = new ArrayList<>();
-        roles.add("USER_ROLE");
+        if (loginResponse.getUser() != null && loginResponse.getUser().getRole() != null) {
+            roles.add("ROLE_" + loginResponse.getUser().getRole().getName());
+        }
 
         // @formatter:off
         JwtClaimsSet claims = JwtClaimsSet.builder()

@@ -13,12 +13,11 @@ import vn.duy.jobIT.domain.res.files.UploadFileResponse;
 import vn.duy.jobIT.service.FileService;
 import vn.duy.jobIT.util.annotation.ApiMessage;
 import vn.duy.jobIT.util.error.StorageException;
+import vn.duy.jobIT.util.validator.FileValidator;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.List;
 
 @RestController
 @RequestMapping(path = "${apiPrefix}/files")
@@ -34,21 +33,20 @@ public class FileController {
             @RequestParam(name = "file", required = false) MultipartFile file,
             @RequestParam("folder") String folder
     ) throws URISyntaxException, IOException, StorageException {
-        if(file == null || file.isEmpty()){
-            throw new StorageException("File is empty, please up load a file");
-        }
-        String fileName = file.getOriginalFilename();
-        List<String> allowedExtensions = Arrays.asList("pdf", "jpg", "jpeg", "png", "doc", "docx");
-        boolean isValid = allowedExtensions.stream().anyMatch(
-                item -> fileName.toLowerCase().endsWith(item)
-        );
-
-        if(!isValid){
-            throw new StorageException("Invalid file extension. Only allows " + allowedExtensions.toString());
+        // Validate file using FileValidator
+        String validationError = FileValidator.getValidationError(file);
+        if (validationError != null) {
+            throw new StorageException(validationError);
         }
 
-        this.fileService.createUploadFolder(baseURI + folder);
-        return ResponseEntity.ok().body(this.fileService.store(file, folder));
+        // Sanitize folder name to prevent path traversal
+        String sanitizedFolder = FileValidator.sanitizeFilename(folder);
+        if (sanitizedFolder == null || sanitizedFolder.isEmpty()) {
+            throw new StorageException("Invalid folder name");
+        }
+
+        this.fileService.createUploadFolder(baseURI + sanitizedFolder);
+        return ResponseEntity.ok().body(this.fileService.store(file, sanitizedFolder));
     }
 
     @GetMapping("/files")
@@ -61,17 +59,25 @@ public class FileController {
             throw new StorageException("Missing required params : (fileName or folder) in query params.");
         }
 
+        // Sanitize inputs to prevent path traversal attacks
+        String sanitizedFileName = FileValidator.sanitizeFilename(fileName);
+        String sanitizedFolder = FileValidator.sanitizeFilename(folder);
+
+        if (sanitizedFileName == null || sanitizedFolder == null) {
+            throw new StorageException("Invalid file name or folder name");
+        }
+
         // check file exist (and not a directory)
-        long fileLength = this.fileService.getFileLength(fileName, folder);
+        long fileLength = this.fileService.getFileLength(sanitizedFileName, sanitizedFolder);
         if (fileLength == 0) {
-            throw new StorageException("File with name = " + fileName + " not found.");
+            throw new StorageException("File with name = " + sanitizedFileName + " not found.");
         }
 
         // download a file
-        InputStreamResource resource = this.fileService.getResource(fileName, folder);
+        InputStreamResource resource = this.fileService.getResource(sanitizedFileName, sanitizedFolder);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + sanitizedFileName + "\"")
                 .contentLength(fileLength)
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(resource);

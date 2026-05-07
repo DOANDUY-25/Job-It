@@ -59,6 +59,47 @@ public class FileValidator {
     }
 
     /**
+     * Validate file (both image and document)
+     */
+    public static boolean isValidFile(MultipartFile file) {
+        return isValidImage(file) || isValidDocument(file);
+    }
+
+    /**
+     * Get detailed validation error message
+     */
+    public static String getValidationError(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return "File is empty, please upload a file";
+        }
+
+        if (file.getSize() > MAX_FILE_SIZE) {
+            return "File size exceeds maximum allowed size of 50MB";
+        }
+
+        String contentType = file.getContentType();
+        String filename = file.getOriginalFilename();
+
+        if (contentType == null) {
+            return "File content type is missing";
+        }
+
+        if (filename != null && !isExtensionMatchingContentType(filename, contentType)) {
+            return "File extension does not match content type. Possible file spoofing attempt.";
+        }
+
+        List<String> allAllowedTypes = new java.util.ArrayList<>();
+        allAllowedTypes.addAll(ALLOWED_IMAGE_TYPES);
+        allAllowedTypes.addAll(ALLOWED_DOCUMENT_TYPES);
+
+        if (!allAllowedTypes.contains(contentType.toLowerCase())) {
+            return "Invalid file type. Allowed types: images (jpg, png, gif, webp) and documents (pdf, doc, docx)";
+        }
+
+        return null; // No error
+    }
+
+    /**
      * Sanitize filename to prevent path traversal attacks
      */
     public static String sanitizeFilename(String filename) {
